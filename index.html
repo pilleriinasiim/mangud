@@ -1,16 +1,228 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tic-Tac-Toe Game Development</title>
-    <meta property="og:image" content="https://bolt.new/static/og_default.png" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:image" content="https://bolt.new/static/og_default.png" />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trips-Traps-Trul</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #f0f9ff 0%, #ecf9f9 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .container {
+      background: white;
+      border-radius: 1.5rem;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      padding: 2rem;
+      max-width: 28rem;
+      width: 100%;
+    }
+
+    h1 {
+      font-size: 2.25rem;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 0.5rem;
+      color: #1f2937;
+    }
+
+    .status {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #3b82f6;
+    }
+
+    .status.winner {
+      color: #16a34a;
+    }
+
+    .status.draw {
+      color: #ea580c;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .cell {
+      aspect-ratio: 1;
+      border: none;
+      border-radius: 0.75rem;
+      font-size: 3rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: linear-gradient(135deg, #dbeafe 0%, #cffafe 100%);
+      color: #3b82f6;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .cell:hover:not(:disabled) {
+      background: linear-gradient(135deg, #bfdbfe 0%, #a5f3fc 100%);
+      transform: scale(1.05);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+
+    .cell:disabled {
+      cursor: default;
+      background: #f3f4f6;
+    }
+
+    .cell.x {
+      color: #3b82f6;
+    }
+
+    .cell.o {
+      color: #06b6d4;
+    }
+
+    .reset-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+      color: white;
+      border: none;
+      font-weight: 600;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.75rem;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .reset-btn:hover {
+      background: linear-gradient(135deg, #2563eb 0%, #0891b2 100%);
+      transform: scale(1.05);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+
+    .icon {
+      width: 20px;
+      height: 20px;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Trips-Traps-Trul</h1>
+    <div class="status" id="status">Järgmine mängija: X</div>
+    <div class="board" id="board">
+      <button class="cell" data-index="0"></button>
+      <button class="cell" data-index="1"></button>
+      <button class="cell" data-index="2"></button>
+      <button class="cell" data-index="3"></button>
+      <button class="cell" data-index="4"></button>
+      <button class="cell" data-index="5"></button>
+      <button class="cell" data-index="6"></button>
+      <button class="cell" data-index="7"></button>
+      <button class="cell" data-index="8"></button>
+    </div>
+    <button class="reset-btn" id="resetBtn">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="23 4 23 10 17 10"></polyline>
+        <path d="M20.49 15a9 9 0 1 1-2-8.83"></path>
+      </svg>
+      Uus mäng
+    </button>
+  </div>
+
+  <script>
+    let board = Array(9).fill(null);
+    let isXNext = true;
+
+    const cells = document.querySelectorAll('.cell');
+    const statusEl = document.getElementById('status');
+    const resetBtn = document.getElementById('resetBtn');
+
+    function calculateWinner(board) {
+      const lines = [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8],
+        [0, 3, 6],
+        [1, 4, 7],
+        [2, 5, 8],
+        [0, 4, 8],
+        [2, 4, 6],
+      ];
+
+      for (const [a, b, c] of lines) {
+        if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+          return board[a];
+        }
+      }
+      return null;
+    }
+
+    function updateStatus() {
+      const winner = calculateWinner(board);
+      const isDraw = !winner && board.every(cell => cell !== null);
+
+      statusEl.classList.remove('winner', 'draw');
+
+      if (winner) {
+        statusEl.textContent = `Võitja: ${winner}`;
+        statusEl.classList.add('winner');
+      } else if (isDraw) {
+        statusEl.textContent = 'Viik!';
+        statusEl.classList.add('draw');
+      } else {
+        statusEl.textContent = `Järgmine mängija: ${isXNext ? 'X' : 'O'}`;
+      }
+    }
+
+    function renderBoard() {
+      cells.forEach((cell, index) => {
+        cell.textContent = board[index] || '';
+        cell.disabled = board[index] !== null || calculateWinner(board) !== null;
+        cell.classList.remove('x', 'o');
+        if (board[index] === 'X') cell.classList.add('x');
+        if (board[index] === 'O') cell.classList.add('o');
+      });
+      updateStatus();
+    }
+
+    function handleCellClick(e) {
+      const index = parseInt(e.target.dataset.index);
+      if (board[index] || calculateWinner(board)) return;
+
+      board[index] = isXNext ? 'X' : 'O';
+      isXNext = !isXNext;
+      renderBoard();
+    }
+
+    function resetGame() {
+      board = Array(9).fill(null);
+      isXNext = true;
+      renderBoard();
+    }
+
+    cells.forEach(cell => cell.addEventListener('click', handleCellClick));
+    resetBtn.addEventListener('click', resetGame);
+
+    renderBoard();
+  </script>
+</body>
 </html>
